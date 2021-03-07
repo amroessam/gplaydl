@@ -31,13 +31,20 @@ dl.add_argument('--packageId', required=True, dest='packageId',
 dl.add_argument('--path', dest='storagepath',
                 help='Path where to store downloaded files', default=False)
 dl.add_argument('--ex', dest='expansionfiles',
-                help='Download expansion (OBB) data if available', default='y')
+                help='Download expansion (OBB) data if available', default='n')
 dl.add_argument('--splits', dest='splits',
-                help='Download split APKs if available', default='y')
+                help='Download split APKs if available', default='n')
+
+# Args to get app details
+vd = subparsers.add_parser('version', help='Get package version')
+vd.add_argument('--device', dest='device',
+                help='Device code name', default=devicecode)
+vd.add_argument('--packageId', required=True, dest='packageId',
+                help='Package ID of the app, i.e. com.whatsapp')
 
 args = ap.parse_args()
 
-if (args.action == 'download' or args.action == 'configure') and args.device:
+if (args.action == 'download' or args.action == 'configure' or args.action == 'details') and args.device:
     devicecode = args.device
 
 HOMEDIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.gplaydl')
@@ -80,7 +87,7 @@ def configureauth():
         config = {'email': email, 'password': password}
         pickle.dump(config, open(CONFIGFILE, 'wb'))
         print(colored(
-            'Configuration file created successfully! Try downloading an app now.', 'green'))
+            'Configuration file created successfully!', 'green'))
     except Exception as e:
         print(colored(str(e), 'yellow'))
         configureauth()
@@ -179,6 +186,35 @@ def downloadapp(packageId):
             'Download failed: %s' % str(e), 'red'))
 
 
+def getdetails(packageId):
+    if os.path.exists(CONFIGFILE):
+        with open(CONFIGFILE, 'rb') as f:
+            config = pickle.load(f)
+            email = config.get('email')
+            password = config.get('password')
+    else:
+        print(
+            colored('Login credentials not found. Please configure them first.', 'yellow'))
+        configureauth()
+        sys.exit(0)
+
+    server = GooglePlayAPI('en_US', 'America/New York', args.device)
+    try:
+        server = do_login(server, email, password)
+    except Exception as e:
+        print(colored('Login failed. Please re-configure your auth.', 'yellow'))
+        configureauth()
+
+    try:
+        details = server.details(packageId)
+        print(colored('%s version: %s' %
+                      (packageId, details['details']['appDetails']['versionCode'])))
+
+    except Exception as e:
+        print(colored(str(e), 'yellow'))
+        # configureauth()
+
+
 def write_cache(gsfId, token):
     if not os.path.exists(CACHEDIR):
         os.makedirs(CACHEDIR, exist_ok=True)
@@ -229,6 +265,11 @@ def main():
             downloadapp(packageId=args.packageId)
         sys.exit(0)
 
+    if args.action == 'version':
+        if args.packageId:
+            getdetails(packageId=args.packageId)
+        sys.exit(0)
 
-if args.action not in ['download', 'configure']:
+
+if args.action not in ['download', 'configure', 'version']:
     ap.print_help()

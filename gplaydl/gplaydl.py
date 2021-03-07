@@ -66,8 +66,6 @@ CACHEFILE = os.path.join(CACHEDIR, '%s.txt' % devicecode)
 CONFIGDIR = os.path.join(HOMEDIR, 'config')
 CONFIGFILE = os.path.join(CONFIGDIR, 'config.txt')
 
-print(CONFIGFILE)
-
 
 def sizeof_fmt(num):
     for unit in ['', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB']:

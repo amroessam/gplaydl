@@ -11,7 +11,8 @@ from termcolor import colored
 from getpass import getpass
 
 devicecode = 'shamu'
-
+email = None
+password = None
 ap = argparse.ArgumentParser(
     description='Command line APK downloader for Google Play Store.')
 subparsers = ap.add_subparsers(dest='action')
@@ -20,6 +21,10 @@ subparsers = ap.add_subparsers(dest='action')
 cp = subparsers.add_parser('configure', help='Configure Google login info.')
 cp.add_argument('--device', dest='device',
                 help='Device code name', default=devicecode)
+cp.add_argument('--email', dest='email',
+                help='login email', default=email)
+cp.add_argument('--password', dest='password',
+                help='login password', default=password)
 
 # Args for downloading an app
 dl = subparsers.add_parser(
@@ -34,6 +39,10 @@ dl.add_argument('--ex', dest='expansionfiles',
                 help='Download expansion (OBB) data if available', default='n')
 dl.add_argument('--splits', dest='splits',
                 help='Download split APKs if available', default='n')
+dl.add_argument('--email', dest='email',
+                help='login email', default=email)
+dl.add_argument('--password', dest='password',
+                help='login password', default=password)
 
 # Args to get app details
 vd = subparsers.add_parser('version', help='Get package version')
@@ -41,6 +50,10 @@ vd.add_argument('--device', dest='device',
                 help='Device code name', default=devicecode)
 vd.add_argument('--packageId', required=True, dest='packageId',
                 help='Package ID of the app, i.e. com.whatsapp')
+vd.add_argument('--email', dest='email',
+                help='login email', default=email)
+vd.add_argument('--password', dest='password',
+                help='login password', default=password)
 
 args = ap.parse_args()
 
@@ -53,6 +66,8 @@ CACHEFILE = os.path.join(CACHEDIR, '%s.txt' % devicecode)
 CONFIGDIR = os.path.join(HOMEDIR, 'config')
 CONFIGFILE = os.path.join(CONFIGDIR, 'config.txt')
 
+print(CONFIGFILE)
+
 
 def sizeof_fmt(num):
     for unit in ['', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB']:
@@ -63,19 +78,20 @@ def sizeof_fmt(num):
 
 
 def configureauth():
-    email = None
-    password = None
-    while email is None:
-        em = input('Google Email: ').strip()
-        if validators.email(em):
-            email = em
-        else:
-            print(colored('Provided email is invalid.', 'red'))
+    email = args.email
+    password = args.password
+    if email == None or password == None:
+        while email is None:
+            em = input('Google Email: ').strip()
+            if validators.email(em):
+                email = em
+            else:
+                print(colored('Provided email is invalid.', 'red'))
 
-    while password is None:
-        password = getpass('Google Password: ').strip()
-        if len(password) == 0:
-            password = None
+        while password is None:
+            password = getpass('Google Password: ').strip()
+            if len(password) == 0:
+                password = None
 
     if not os.path.exists(CONFIGDIR):
         os.makedirs(CONFIGDIR, exist_ok=True)

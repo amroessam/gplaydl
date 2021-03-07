@@ -22,9 +22,9 @@ cp = subparsers.add_parser('configure', help='Configure Google login info.')
 cp.add_argument('--device', dest='device',
                 help='Device code name', default=devicecode)
 cp.add_argument('--email', dest='email',
-                help='login email', default=email)
+                help='login email')
 cp.add_argument('--password', dest='password',
-                help='login password', default=password)
+                help='login password')
 
 # Args for downloading an app
 dl = subparsers.add_parser(
@@ -106,7 +106,6 @@ def configureauth():
             'Configuration file created successfully!', 'green'))
     except Exception as e:
         print(colored(str(e), 'yellow'))
-        configureauth()
 
 
 def downloadapp(packageId):
